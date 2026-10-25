@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIST 2.0 - testovací verze</title>
+    <style>
+        :root {
+            --bg-main: #f4f5f7;
+            --bg-card: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #555555;
+            --accent: #222222;
+            --accent-hover: #444444;
+            --border: #d1d5db;
+            --border-focus: #888888;
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--bg-main); 
+            color: var(--text-main); 
+            padding: 20px; 
+            line-height: 1.6; 
+        }
+        
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: var(--bg-card); 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px var(--shadow); 
+        }
+
+        .controls { 
+            display: flex; 
+            justify-content: center; 
+            gap: 15px; 
+            margin-bottom: 30px; 
+            border-bottom: 1px solid var(--border); 
+            padding-bottom: 25px; 
+        }
+        
+        .btn { 
+            padding: 12px 24px; 
+            border: 1px solid var(--border); 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            background: var(--bg-card); 
+            color: var(--text-main); 
+            font-weight: 500;
+            transition: all 0.2s; 
+        }
+        
+        .btn:hover { background: var(--bg-main); }
+        .btn.active { background: var(--accent); color: var(--bg-card); border-color: var(--accent); }
+        
+        h2.block-title { 
+            font-size: 1.1rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            color: var(--text-muted); 
+            border-bottom: 2px solid var(--bg-main); 
+            padding-bottom: 8px; 
+            margin-top: 40px; 
+        }
+        
+        .question { 
+            margin-bottom: 25px; 
+            padding: 20px; 
+            background: var(--bg-card); 
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent); 
+            border-radius: 6px; 
+            transition: opacity 0.3s; 
+        }
+        
+        .question label.q-text { 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 15px; 
+            font-size: 1.05em; 
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        /* TOOLTIP IKONA "i" */
+        .info-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: bold;
+            font-family: serif;
+            cursor: help;
+            position: relative;
+            margin-left: 5px;
+        }
+        .info-icon:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 135%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: var(--bg-card);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: normal;
+            font-family: sans-serif;
+            white-space: pre-wrap;
+            width: max-content;
+            max-width: 500px;
+            text-align: left;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            pointer-events: none;
+        }
+        .info-icon:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: var(--accent) transparent transparent transparent;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* SEGMENTOVANÉ TLAČÍTKO (Posouvací A/N) */
+        .segmented-control {
+            display: inline-flex;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+        .segmented-control input[type="radio"] {
+            display: none;
+        }
+        .segmented-control label {
+            padding: 10px 28px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-right: 1px solid var(--border);
+            font-weight: 500;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .segmented-control label:last-of-type {
+            border-right: none;
+        }
+        .segmented-control input[type="radio"]:checked + label {
+            background: var(--accent);
+            color: var(--bg-card);
+        }
+
+        /* BĚŽNÉ CHECKBOXY A RADIO BUTTONY */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95em;
+        }
+        .checkbox-group label:hover {
+            border-color: var(--border-focus);
+        }
+        .checkbox-group input[type="checkbox"], 
+        .checkbox-group input[type="radio"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            margin-right: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .checkbox-group input[type="checkbox"] { border-radius: 4px; }
+        .checkbox-group input[type="radio"] { border-radius: 50%; }
+        
+        .checkbox-group input[type="checkbox"]:checked,
+        .checkbox-group input[type="radio"]:checked {
+            border-color: var(--accent);
+            background: var(--accent);
+        }
+        .checkbox-group input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 6px;
+            width: 4px; height: 9px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .checkbox-group input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px;
+            width: 8px; height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        /* TEXTOVÁ POLE A SELECTY */
+        input[type="text"], input[type="number"], select, textarea { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border: 1px solid var(--border); 
+            border-radius: 6px; 
+            background: var(--bg-card); 
+            font-size: 1em; 
+            transition: 0.2s;
+            color: var(--text-main);
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+        select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23555" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+        select optgroup { font-weight: bold; background: var(--bg-main); color: var(--text-main); }
+        select option { background: var(--bg-card); }
+        
+        /* POSUVNÍKY (SLIDERS) */
+        input[type="range"] { 
+            -webkit-appearance: none;
+            width: 100%; 
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+            margin: 20px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        .range-value-display { font-weight: bold; color: var(--accent); font-size: 1.2em; display: inline-block; min-width: 40px; text-align: center; }
+        .range-container { display: flex; align-items: center; gap: 15px; }
+        .range-labels { display:flex; justify-content:space-between; font-size:0.85em; color: var(--text-muted); font-weight: 500; }
+
+        .hidden-by-logic { display: none !important; }
+        
+        #slideshow-nav { display: none; justify-content: space-between; margin-top: 30px; }
+        .mode-slideshow .question { display: none; border-left: none; padding: 0; border: none; }
+        .mode-slideshow .question.active-slide { display: block; }
+        .mode-slideshow .block-title { display: none; }
+        .mode-slideshow #slideshow-nav { display: flex; }
+
+        /* Zvýraznění a odlišení kategorií (optgroup) */
+.ts-dropdown .optgroup-header {
+    font-weight: bold !important;
+    color: var(--text-muted) !important;
+    background-color: var(--bg-main) !important;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 12px !important;
+}
+
+/* Odsazení reálných hodnot (států) o stupeň doprava */
+.ts-dropdown .optgroup .option {
+    padding-left: 24px !important;
+}
+
+/* Jemné vizuální oddělení jednotlivých skupin od sebe */
+.ts-dropdown .optgroup {
+    border-bottom: 1px solid var(--border);
+}
+.ts-dropdown .optgroup:last-child {
+    border-bottom: none;
+}
+
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <button type="button" class="btn active" id="btn-long" onclick="setMode('long')">Long-format</button>
+        <button type="button" class="btn" id="btn-slide" onclick="setMode('slideshow')">Slideshow</button>
+    </div>
+
+    <form id="survey-form" class="mode-long">
+        
+        <!-- BLOK 3: Základní údaje -->
+        <h2 class="block-title"></h2>
+        <div class="question" id="q-1">
+            <label class="q-text">Uveďte rok narození:</label>
+            <input type="number" name="q1" min="1900" max="2026" placeholder="4 číslice (např. 1990)">
+        </div>
+        <div class="question" id="q-2">
+    <label class="q-text">Uveďte své pohlaví:</label>
+    <div class="checkbox-group">
+        <label><input type="radio" name="q2" value="a"> muž</label>
+        <label><input type="radio" name="q2" value="b"> žena</label>
+        <label><input type="radio" name="q2" value="c"> trans muž</label>
+        <label><input type="radio" name="q2" value="d"> trans žena</label>
+        <label><input type="radio" name="q2" value="e"> intersex</label>
+        <label><input type="radio" name="q2" value="f"> nebinární</label>
+    </div>
+</div>
+        <div class="question" id="q-3">
+            <label class="q-text">Máte trvalý pobyt v ČR?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q3_a" name="q3" value="A">
+                <label for="q3_a">Ano</label>
+                <input type="radio" id="q3_n" name="q3" value="N">
+                <label for="q3_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-3A">
+            <label class="q-text">Jaké máte občanství?</label>
+            <select name="q3A" id="q3A-select" placeholder="Vyhledejte stát...">
+                <optgroup label="Evropa">
+                    <option value="Albánie">Albánie</option>
+                    <option value="Andorra">Andorra</option>
+                    <option value="Belgie">Belgie</option>
+                    <option value="Bělorusko">Bělorusko</option>
+                    <option value="Bosna a Hercegovina">Bosna a Hercegovina</option>
+                    <option value="Bulharsko">Bulharsko</option>
+                    <option value="Černá Hora">Černá Hora</option>
+                    <option value="Dánsko">Dánsko</option>
+                    <option value="Estonsko">Estonsko</option>
+                    <option value="Finsko">Finsko</option>
+                    <option value="Francie">Francie</option>
+                    <option value="Irsko">Irsko</option>
+                    <option value="Island">Island</option>
+                    <option value="Itálie">Itálie</option>
+                    <option value="Lichtenštejnsko">Lichtenštejnsko</option>
+                    <option value="Litva">Litva</option>
+                    <option value="Lotyšsko">Lotyšsko</option>
+                    <option value="Lucembursko">Lucembursko</option>
+                    <option value="Maďarsko">Maďarsko</option>
+                    <option value="Malta">Malta</option>
+                    <option value="Moldavsko">Moldavsko</option>
+                    <option value="Monako">Monako</option>
+                    <option value="Německo">Německo</option>
+                    <option value="Nizozemsko">Nizozemsko</option>
+                    <option value="Norsko">Norsko</option>
+                    <option value="Polsko">Polsko</option>
+                    <option value="Portugalsko">Portugalsko</option>
+                    <option value="Rakousko">Rakousko</option>
+                    <option value="Rumunsko">Rumunsko</option>
+                    <option value="Rusko">Rusko</option>
+                    <option value="Řecko">Řecko</option>
+                    <option value="San Marino">San Marino</option>
+                    <option value="Severní Makedonie">Severní Makedonie</option>
+                    <option value="Slovensko">Slovensko</option>
+                    <option value="Spojené království">Spojené království</option>
+                    <option value="Srbsko">Srbsko</option>
+                    <option value="Španělsko">Španělsko</option>
+                    <option value="Švédsko">Švédsko</option>
+                    <option value="Švýcarsko">Švýcarsko</option>
+                    <option value="Ukrajina">Ukrajina</option>
+                    <option value="Vatikán">Vatikán</option>
+                </optgroup>
+                <optgroup label="Severní Amerika">
+                    <option value="Antigua a Barbuda">Antigua a Barbuda</option>
+                    <option value="Bahamy">Bahamy</option>
+                    <option value="Barbados">Barbados</option>
+                    <option value="Belize">Belize</option>
+                    <option value="Dominika">Dominika</option>
+                    <option value="Dominikánská republika">Dominikánská republika</option>
+                    <option value="Grenada">Grenada</option>
+                    <option value="Guatemala">Guatemala</option>
+                    <option value="Haiti">Haiti</option>
+                    <option value="Honduras">Honduras</option>
+                    <option value="Jamajka">Jamajka</option>
+                    <option value="Kanada">Kanada</option>
+                    <option value="Kostarika">Kostarika</option>
+                    <option value="Kuba">Kuba</option>
+                    <option value="Mexiko">Mexiko</option>
+                    <option value="Nikaragua">Nikaragua</option>
+                    <option value="Panama">Panama</option>
+                    <option value="Salvador">Salvador</option>
+                    <option value="Spojené státy americké">Spojené státy americké</option>
+                    <option value="Svatá Lucie">Svatá Lucie</option>
+                    <option value="Svatý Kryštof a Nevis">Svatý Kryštof a Nevis</option>
+                    <option value="Svatý Vincenc a Grenadiny">Svatý Vincenc a Grenadiny</option>
+                    <option value="Trinidad a Tobago">Trinidad a Tobago</option>
+                </optgroup>
+                <optgroup label="Jižní Amerika">
+                    <option value="Argentina">Argentina</option>
+                    <option value="Bolívie">Bolívie</option>
+                    <option value="Brazílie">Brazílie</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Ekvádor">Ekvádor</option>
+                    <option value="Guyana">Guyana</option>
+                    <option value="Kolumbie">Kolumbie</option>
+                    <option value="Paraguay">Paraguay</option>
+                    <option value="Peru">Peru</option>
+                    <option value="Surinam">Surinam</option>
+                    <option value="Uruguay">Uruguay</option>
+                    <option value="Venezuela">Venezuela</option>
+                </optgroup>
+                <optgroup label="Austrálie a Oceánie">
+                    <option value="Austrálie">Austrálie</option>
+                    <option value="Fidži">Fidži</option>
+                    <option value="Kiribati">Kiribati</option>
+                    <option value="Marshallovy ostrovy">Marshallovy ostrovy</option>
+                    <option value="Mikronésie">Mikronésie</option>
+                    <option value="Nauru">Nauru</option>
+                    <option value="Nový Zéland">Nový Zéland</option>
+                    <option value="Palau">Palau</option>
+                    <option value="Papua-Nová Guinea">Papua-Nová Guinea</option>
+                    <option value="Samoa">Samoa</option>
+                    <option value="Šalamounovy ostrovy">Šalamounovy ostrovy</option>
+                    <option value="Tonga">Tonga</option>
+                    <option value="Tuvalu">Tuvalu</option>
+                    <option value="Vanuatu">Vanuatu</option>
+                </optgroup>
+                <optgroup label="Asie">
+                    <option value="Afghánistán">Afghánistán</option>
+                    <option value="Arménie">Arménie</option>
+                    <option value="Ázerbájdžán">Ázerbájdžán</option>
+                    <option value="Bahrajn">Bahrajn</option>
+                    <option value="Bangladéš">Bangladéš</option>
+                    <option value="Bhútán">Bhútán</option>
+                    <option value="Brunej">Brunej</option>
+                    <option value="Čína">Čína</option>
+                    <option value="Filipíny">Filipíny</option>
+                    <option value="Gruzie">Gruzie</option>
+                    <option value="Indie">Indie</option>
+                    <option value="Indonésie">Indonésie</option>
+                    <option value="Irák">Irák</option>
+                    <option value="Írán">Írán</option>
+                    <option value="Izrael">Izrael</option>
+                    <option value="Japonsko">Japonsko</option>
+                    <option value="Jemen">Jemen</option>
+                    <option value="Jordánsko">Jordánsko</option>
+                    <option value="Kambodža">Kambodža</option>
+                    <option value="Katar">Katar</option>
+                    <option value="Kazachstán">Kazachstán</option>
+                    <option value="Korejská lidově demokratická republika (Severní Korea)">Korejská lidově demokratická republika (Severní Korea)</option>
+                    <option value="Korejská republika (Jižní Korea)">Korejská republika (Jižní Korea)</option>
+                    <option value="Kuvajt">Kuvajt</option>
+                    <option value="Kypr">Kypr</option>
+                    <option value="Kyrgyzstán">Kyrgyzstán</option>
+                    <option value="Laos">Laos</option>
+                    <option value="Libanon">Libanon</option>
+                    <option value="Malajsie">Malajsie</option>
+                    <option value="Maledivy">Maledivy</option>
+                    <option value="Mongolsko">Mongolsko</option>
+                    <option value="Myanmar (Barma)">Myanmar (Barma)</option>
+                    <option value="Nepál">Nepál</option>
+                    <option value="Omán">Omán</option>
+                    <option value="Pákistán">Pákistán</option>
+                    <option value="Saúdská Arábie">Saúdská Arábie</option>
+                    <option value="Singapur">Singapur</option>
+                    <option value="Spojené arabské emiráty">Spojené arabské emiráty</option>
+                    <option value="Srí Lanka">Srí Lanka</option>
+                    <option value="Sýrie">Sýrie</option>
+                    <option value="Tádžikistán">Tádžikistán</option>
+                    <option value="Thajsko">Thajsko</option>
+                    <option value="Turecko">Turecko</option>
+                    <option value="Turkmenistán">Turkmenistán</option>
+                    <option value="Uzbekistán">Uzbekistán</option>
+                    <option value="Vietnam">Vietnam</option>
+                    <option value="Východní Timor">Východní Timor</option>
+                </optgroup>
+                <optgroup label="Afrika">
+                    <option value="Alžírsko">Alžírsko</option>
+                    <option value="Angola">Angola</option>
+                    <option value="Benin">Benin</option>
+                    <option value="Botswana">Botswana</option>
+                    <option value="Burkina Faso">Burkina Faso</option>
+                    <option value="Burundi">Burundi</option>
+                    <option value="Čad">Čad</option>
+                    <option value="Demokratická republika Kongo">Demokratická republika Kongo</option>
+                    <option value="Džibutsko">Džibutsko</option>
+                    <option value="Egypt">Egypt</option>
+                    <option value="Eritrea">Eritrea</option>
+                    <option value="Eswatini (Svazijsko)">Eswatini (Svazijsko)</option>
+                    <option value="Etiopie">Etiopie</option>
+                    <option value="Gabon">Gabon</option>
+                    <option value="Gambie">Gambie</option>
+                    <option value="Ghana">Ghana</option>
+                    <option value="Guinea">Guinea</option>
+                    <option value="Guinea-Bissau">Guinea-Bissau</option>
+                    <option value="Jihoafrická republika">Jihoafrická republika</option>
+                    <option value="Jihosúdán">Jihosúdán</option>
+                    <option value="Kamerun">Kamerun</option>
+                    <option value="Kapverdy">Kapverdy</option>
+                    <option value="Keňa">Keňa</option>
+                    <option value="Komory">Komory</option>
+                    <option value="Kongo">Kongo</option>
+                    <option value="Lesotho">Lesotho</option>
+                    <option value="Libérie">Libérie</option>
+                    <option value="Libye">Libye</option>
+                    <option value="Madagaskar">Madagaskar</option>
+                    <option value="Malawi">Malawi</option>
+                    <option value="Mali">Mali</option>
+                    <option value="Maroko">Maroko</option>
+                    <option value="Mauritánie">Mauritánie</option>
+                    <option value="Mauricius">Mauricius</option>
+                    <option value="Mozambik">Mozambik</option>
+                    <option value="Namibie">Namibie</option>
+                    <option value="Niger">Niger</option>
+                    <option value="Nigérie">Nigérie</option>
+                    <option value="Pobřeží slonoviny">Pobřeží slonoviny</option>
+                    <option value="Rovníková Guinea">Rovníková Guinea</option>
+                    <option value="Rwanda">Rwanda</option>
+                    <option value="Senegal">Senegal</option>
+                    <option value="Seychely">Seychely</option>
+                    <option value="Sierra Leone">Sierra Leone</option>
+                    <option value="Somálsko">Somálsko</option>
+                    <option value="Středoafrická republika">Středoafrická republika</option>
+                    <option value="Súdán">Súdán</option>
+                    <option value="Svatý Tomáš a Princův ostrov">Svatý Tomáš a Princův ostrov</option>
+                    <option value="Tanzanie">Tanzanie</option>
+                    <option value="Togo">Togo</option>
+                    <option value="Tunisko">Tunisko</option>
+                    <option value="Uganda">Uganda</option>
+                    <option value="Zambie">Zambie</option>
+                    <option value="Zimbabwe">Zimbabwe</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="question" id="q-4">
+            <label class="q-text">V jakém kraji Česka, nebo Slovenska žijete?</label>
+            <select name="q4" id="q4-select" autocomplete="off">
+            <optgroup label="Česká republika">
+    <option value="Hlavní město Praha">Hlavní město Praha</option>
+    <option value="Středočeský kraj">Středočeský kraj</option>
+    <option value="Jihočeský kraj">Jihočeský kraj</option>
+    <option value="Plzeňský kraj">Plzeňský kraj</option>
+    <option value="Karlovarský kraj">Karlovarský kraj</option>
+    <option value="Ústecký kraj">Ústecký kraj</option>
+    <option value="Liberecký kraj">Liberecký kraj</option>
+    <option value="Královéhradecký kraj">Královéhradecký kraj</option>
+    <option value="Pardubický kraj">Pardubický kraj</option>
+    <option value="Kraj Vysočina">Kraj Vysočina</option>
+    <option value="Jihomoravský kraj">Jihomoravský kraj</option>
+    <option value="Olomoucký kraj">Olomoucký kraj</option>
+    <option value="Zlínský kraj">Zlínský kraj</option>
+    <option value="Moravskoslezský kraj">Moravskoslezský kraj</option>
+            </optgroup>
+            <optgroup label="Slovenská republika">
+    <option value="Bratislavský kraj">Bratislavský kraj</option>
+    <option value="Trnavský kraj">Trnavský kraj</option>
+    <option value="Trenčiansky kraj">Trenčiansky kraj</option>
+    <option value="Nitriansky kraj">Nitriansky kraj</option>
+    <option value="Žilinský kraj">Žilinský kraj</option>
+    <option value="Banskobystrický kraj">Banskobystrický kraj</option>
+    <option value="Prešovský kraj">Prešovský kraj</option>
+    <option value="Košický kraj">Košický kraj</option>
+            </optgroup>
+            </select>
+        </div>
+
+        <!-- BLOK 4: Důvody testu, PrEP, PEP -->
+        <h2 class="block-title"></h2>
+        <div class="question" id="q-5">
+            <label class="q-text">Byl(a) jste někdy v životě na HIV testu? <span class="info-icon" data-tooltip="Testy na HIV se provádí i v rámci dárcovství krve a jejích složek a v těhotenství.">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q5_a" name="q5" value="A">
+                <label for="q5_a">Ano</label>
+                <input type="radio" id="q5_n" name="q5" value="N">
+                <label for="q5_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-5A">
+            <label class="q-text">Kdy se tento HIV test uskutečnil?</label>
+            <div class="checkbox-group">
+                <label><input type="radio" name="q5A" value="a">v průběhu posledního měsíce</label>
+                <label><input type="radio" name="q5A" value="b">v posledních 2 měsících</label>
+                <label><input type="radio" name="q5A" value="c">v posledních 3-6 měsících</label>
+                <label><input type="radio" name="q5A" value="d">před více než 6 měsíci</label>
+                <label><input type="radio" name="q5A" value="e">před více než 1 rokem</label>
+                <label><input type="radio" name="q5A" value="f">před více než 2 lety</label>
+                <label><input type="radio" name="q5A" value="g">před 3 a více lety</label>
+            </div>
+        </div>
+        <div class="question" id="q-6">
+            <label class="q-text">Proč se přicházíte testovat? Vyberte všechny relevantní důvody.</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q6" value="a"> Měl(a) jsem nechráněný styk.</label>
+                <label><input type="checkbox" name="q6" value="b"> Mívám bezpečný styk, ale přesto bych se rád(a) otestoval(a). [pravidelné testování]</label>
+                <label><input type="checkbox" name="q6" value="c"> Navazuji nový vztah a chci být otestován(a).</label>
+                <label><input type="checkbox" name="q6" value="d"> Ukončil(a) jsem vztah s nechráněnými styky.</label>
+                <label><input type="checkbox" name="q6" value="e"> Měl(a) jsem sexuální styk s člověkem žijícím s HIV.</label>
+                <label><input type="checkbox" name="q6" value="f"> Měl(a) jsem sexuální styk s osobou, které byla diagnostikovaná jiná sexuálně přenosná infekce.</label>
+                <label><input type="checkbox" name="q6" value="g"> Mám zdravotní obtíže. / Byla mi diagnostikována jiná sexuálně přenosná infekce.</label>
+                <label><input type="checkbox" name="q6" value="h"> Stal(a) jsem se obětí sexuálního násilí.</label>
+                <label><input type="checkbox" name="q6" value="i"> Aplikoval(a) jsem si injekčně drogu.</label>
+                <label><input type="checkbox" name="q6" value="j"> Při minulé návštěvě nebyl dostatečný odstup od rizika. [tzv. tříměsíční diagnostické okno]</label>
+                <label><input type="checkbox" name="q6" value="k"> Jiné</label>
+            </div>
+        </div>
+        <div class="question" id="q-7">
+            <label class="q-text">Užíval(a) jste někdy PrEP nebo PEP? <span class="info-icon" data-tooltip="Preventivně užívané léky zabraňující infekci HIV:&#10;PREP = pre-expoziční profylaxe,&#10;PEP = post-expoziční profylaxe">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q7_a" name="q7" value="A">
+                <label for="q7_a">Ano</label>
+                <input type="radio" id="q7_n" name="q7" value="N">
+                <label for="q7_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-7A">
+            <label class="q-text">Jednalo se o situaci, kdy:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q7A" value="a"> Užívám PrEP a chodím k lékaři na prohlídky.</label>
+                <label><input type="checkbox" name="q7A" value="b"> Užívám PrEP bez pravidelných prohlídek.</label>
+                <label><input type="checkbox" name="q7A" value="c"> Užíval(a) jsem PrEP v minulosti.</label>
+                <label><input type="checkbox" name="q7A" value="d"> Užil(a) jsem o PEP v minulosti.</label>
+            </div>
+        </div>
+
+        <!-- BLOK 4A: Kontakt s HIV -->
+        <h2 class="block-title block-4a hidden-by-logic"></h2>
+        <div class="question hidden-by-logic" id="q-8">
+            <label class="q-text">Měl(a) Váš HIV pozitivní partner(ka) nezjistitelné množství viru v krvi? <span class="info-icon" data-tooltip="Tzv. nedetekovatelná či nulová virová nálož">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q8_a" name="q8" value="A">
+                <label for="q8_a">Ano</label>
+                <input type="radio" id="q8_n" name="q8" value="N">
+                <label for="q8_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-8A">
+            <label class="q-text">Byl styk s ním/ní chráněný?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q8a_a" name="q8A" value="A">
+                <label for="q8a_a">Ano</label>
+                <input type="radio" id="q8a_n" name="q8A" value="N">
+                <label for="q8a_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-8B">
+    <label class="q-text">Kdy naposledy jste spolu měli nechráněný styk?</label>
+    <div class="checkbox-group">
+        <label><input type="radio" name="q8B" value="a"> v posledních 3 dnech</label>
+        <label><input type="radio" name="q8B" value="b"> před méně než 1 měsícem</label>
+        <label><input type="radio" name="q8B" value="c"> před 1-3 měsíci</label>
+        <label><input type="radio" name="q8B" value="d"> před více než 3 měsíci</label>
+    </div>
+</div>
+
+        <!-- BLOK 4B: Kontakt s STI -->
+        <h2 class="block-title block-4b hidden-by-logic"></h2>
+        <div class="question hidden-by-logic" id="q-9">
+            <label class="q-text">Jakou sexuálně přenosnou infekci měl Váš(e) partner(ka) diagnostikovanou?</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q9" value="a">syfilis</label>
+                <label><input type="checkbox" name="q9" value="b">žloutenka typu B</label>
+                <label><input type="checkbox" name="q9" value="c">žloutenka typu C</label>
+                <label><input type="checkbox" name="q9" value="d">jiná</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-10">
+    <label class="q-text">Kdy naposledy jste spolu měli styk?</label>
+    <div class="checkbox-group">
+        <label><input type="radio" name="q10" value="a"> v posledních 3 dnech</label>
+        <label><input type="radio" name="q10" value="b"> před méně než 1 měsícem</label>
+        <label><input type="radio" name="q10" value="c"> před 1-3 měsíci</label>
+        <label><input type="radio" name="q10" value="d"> před více než 3 měsíci</label>
+    </div>
+    </div>
+
+        <!-- BLOK 5: Sexuální partneři -->
+        <h2 class="block-title block-5 hidden-by-logic"></h2>
+        <div class="question" id="q-11">
+            <label class="q-text">S kolika osobami jste měl(a) od posledního testu sexuální styk? [Pokud s nikým, uveďte "0".]<span class="info-icon" data-tooltip="Myšleno orální, vaginální či anální styk.">i</span></label>
+            <input type="number" name="q11" min="0" placeholder="Zadejte celkový počet">
+        </div>
+        <div class="question hidden-by-logic" id="q-12">
+            <label class="q-text">Uveďte jakou část z toho tvoří muži či ženy.</label>
+    
+    <div class="range-container">
+        <label style="min-width: 60px;">Muži:</label>
+        <input type="range" name="q12_men" id="q12-men-slider" min="0" max="0" value="0">
+        <span class="range-value-display" id="q12-men-val">0</span>
+    </div>
+    
+    <div class="range-container" style="margin-top: 15px;">
+        <label style="min-width: 60px;">Ženy:</label>
+        <input type="range" name="q12_women" id="q12-women-slider" min="0" max="0" value="0">
+        <span class="range-value-display" id="q12-women-val">0</span>
+            </div>
+            
+        </div>
+        
+        <div class="question hidden-by-logic" id="q-13">
+    <label class="q-text">S kolika z nich jste měl(a) nechráněný penetrativní styk? [Pokud s nikým, uveďte "0".]<span class="info-icon" data-tooltip="Penetrativní (inzertivní) styk je označení pro jakoukoli sexuální aktivitu,&#10;při které dochází ke vložení (vniknutí) části těla nebo erotické pomůcky do tělesného otvoru druhého partnera.">i</span></label>
+    
+    <div class="range-container">
+        <label style="min-width: 60px;">Muži:</label>
+        <input type="range" name="q13_men" id="q13-men-slider" min="0" max="0" value="0">
+        <span class="range-value-display" id="q13-men-val">0</span>
+    </div>
+    
+    <div class="range-container" style="margin-top: 15px;">
+        <label style="min-width: 60px;">Ženy:</label>
+        <input type="range" name="q13_women" id="q13-women-slider" min="0" max="0" value="0">
+        <span class="range-value-display" id="q13-women-val">0</span>
+    </div>
+</div>
+
+        <!-- BLOK 5A -->
+        <h2 class="block-title block-5a hidden-by-logic"></h2>
+        <div class="question hidden-by-logic" id="q-14">
+            <label class="q-text">Kolik z uvedených osob bylo náhodných, tzn. neznámých/na jednu noc apod.? [Pokud nikdo, uveďte "0".]</label>
+            <div class="range-container">
+                <label style="min-width: 60px;">Muži:</label>
+                <input type="range" name="q14_men" id="q14-men-slider" min="0" max="0" value="0">
+                <span class="range-value-display" id="q14-men-val">0</span>
+            </div>
+            
+            <div class="range-container" style="margin-top: 15px;">
+                <label style="min-width: 60px;">Ženy:</label>
+                <input type="range" name="q14_women" id="q14-women-slider" min="0" max="0" value="0">
+                <span class="range-value-display" id="q14-women-val">0</span>
+            </div>
+        </div>
+       <div class="question hidden-by-logic" id="q-15">
+    <label class="q-text">Kdy naposledy jste měl(a) nechráněný penetrativní styk?<span class="info-icon" data-tooltip="Penetrativní (inzertivní) styk je označení pro jakoukoli sexuální aktivitu,&#10;při které dochází ke vložení (vniknutí) části těla nebo erotické pomůcky do tělesného otvoru druhého partnera.">i</span></label>
+    <div class="checkbox-group">
+        <label><input type="radio" name="q15" value="a"> v posledních 3 dnech</label>
+        <label><input type="radio" name="q15" value="b"> před méně než 3 měsíci</label>
+        <label><input type="radio" name="q15" value="c"> před více než 3 měsíci</label>
+    </div>
+    </div>
+
+        <!-- BLOK 6: Sexuální praktiky -->
+        <h2 class="block-title"></h2>
+        <div class="question" id="q-16">
+            <label class="q-text">Měl(a) jste od posledního testu anální styk?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q16_a" name="q16" value="A">
+                <label for="q16_a">Ano</label>
+                <input type="radio" id="q16_n" name="q16" value="N">
+                <label for="q16_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-16A">
+            <label class="q-text">O jaký druh análního styku šlo? Vyberte více možností.</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q16A" value="a"> aktivní</label>
+                <label><input type="checkbox" name="q16A" value="b"> pasivní</label>
+                <label><input type="checkbox" name="q16A" value="c"> chráněný</label>
+                <label><input type="checkbox" name="q16A" value="d"> nechráněný</label>
+                <label><input type="checkbox" name="q16A" value="e"> s ejakulací do vás</label>
+                <label><input type="checkbox" name="q16A" value="f"> nechráněný s erotickou pomůckou nebo protézou</label>
+            </div>
+        </div>
+        <div class="question" id="q-17">
+            <label class="q-text">Měl(a) jste od posledního testu nechráněný orální styk?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q17_a" name="q17" value="A">
+                <label for="q17_a">Ano</label>
+                <input type="radio" id="q17_n" name="q17" value="N">
+                <label for="q17_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-18">
+            <label class="q-text">Měl(a) jste od poslední testu vaginální styk?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q18_a" name="q18" value="A">
+                <label for="q18_a">Ano</label>
+                <input type="radio" id="q18_n" name="q18" value="N">
+                <label for="q18_n">Ne</label>
+            </div>
+        </div>
+        <div class="question" id="q-19">
+    <label class="q-text">Používáte při sexu k ochraně před pohlavními infekcemi kondom?</label>
+    <div class="checkbox-group">
+        <label><input type="radio" name="q19" value="a"> vždy</label>
+        <label><input type="radio" name="q19" value="b"> někdy</label>
+        <label><input type="radio" name="q19" value="c"> nikdy</label>
+    </div>
+    </div>
+        <div class="question hidden-by-logic" id="q-19A">
+            <label class="q-text">Jaké důvody máte k nepoužívání kondomu? Můžete uvést více možností.</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q19A" value="a"> Kondom snižuje požitek při sexu nebo se vytratí erekce.</label>
+                <label><input type="checkbox" name="q19A" value="b"> Kondom jsme u sebe neměli nebo jsme ho nepoužili v zápalu situace.</label>
+                <label><input type="checkbox" name="q19A" value="c"> Kondom jsem nepoužil(a) kvůli alkoholu.</label>
+                <label><input type="checkbox" name="q19A" value="d"> Vím, že můj partner má aktuální test na sexuálně přenosné infekce nebo má nedetekovatelnou nálož.</label>
+                <label><input type="checkbox" name="q19A" value="e"> Předpokládám, že můj partner/ka má aktuální testy na sexuálně přenosné nemoci.</label>
+                <label><input type="checkbox" name="q19A" value="f"> Stydím se kondom použít, nebo můj partner kondomy obvykle odmítá.</label>
+                <label><input type="checkbox" name="q19A" value="g"> Já nebo mí partneři máme alergii na latex.</label>
+                <label><input type="checkbox" name="q19A" value="h"> Používáme jinou antikoncepci.</label>
+                <label><input type="checkbox" name="q19A" value="i"> Často mi kondom selhává.</label>
+                <label><input type="checkbox" name="q19A" value="j"> Kondomy jsou příliš drahé.</label>
+                <label><input type="checkbox" name="q19A" value="k"> Jiné</label>
+            </div>
+        </div>
+        <div class="question" id="q-20">
+    <label class="q-text">Používáte při sexu lubrikační gel?</label>
+    <div class="checkbox-group">
+        <label><input type="radio" name="q20" value="a"> vždy</label>
+        <label><input type="radio" name="q20" value="b"> někdy</label>
+        <label><input type="radio" name="q20" value="c"> nikdy</label>
+    </div>
+    </div>
+
+        <!-- BLOK 7: Sexuálně přenosné infekce -->
+        <h2 class="block-title"></h2>
+        <div class="question" id="q-21">
+            <label class="q-text">Prodělal(a) jste někdy syfilis?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q21_a" name="q21" value="A">
+                <label for="q21_a">Ano</label>
+                <input type="radio" id="q21_n" name="q21" value="N">
+                <label for="q21_n">Ne</label>
+            </div>
+        </div>
+        <div class="question" id="q-22A">
+            <label class="q-text">Prodělal(a) jste infekci žloutenkou typu B?<span class="info-icon" data-tooltip="Žloutenka (virová hepatitida) je zánětlivé onemocnění jater.&#10;Žloutenka A („nemoc špinavých rukou“) – Přenáší se znečištěnou vodou, potravinami nebo špatnou hygienou. Existuje proti ní účinné očkování.&#10;Žloutenka B – Přenáší se krví, nechráněným pohlavním stykem nebo z matky na dítě při porodu. Existuje proti ní účinné očkování.&#10;Žloutenka C – Přenáší se téměř výhradně krví. Očkování neexistuje.">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q22A_a" name="q22A" value="A">
+                <label for="q22A_a">Ano</label>
+                <input type="radio" id="q22A_n" name="q22A" value="N">
+                <label for="q22A_n">Ne</label>
+            </div>
+        </div>
+        <div class="question" id="q-22B">
+            <label class="q-text">Prodělal(a) jste infekci žloutenkou typu C?<span class="info-icon" data-tooltip="Žloutenka (virová hepatitida) je zánětlivé onemocnění jater.&#10;Žloutenka A („nemoc špinavých rukou“) – Přenáší se znečištěnou vodou, potravinami nebo špatnou hygienou. Existuje proti ní účinné očkování.&#10;Žloutenka B – Přenáší se krví, nechráněným pohlavním stykem nebo z matky na dítě při porodu. Existuje proti ní účinné očkování.&#10;Žloutenka C – Přenáší se téměř výhradně krví. Očkování neexistuje.">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q22B_a" name="q22B" value="A">
+                <label for="q22B_a">Ano</label>
+                <input type="radio" id="q22B_n" name="q22B" value="N">
+                <label for="q22B_n">Ne</label>
+            </div>
+        </div>
+        <div class="question" id="q-23">
+            <label class="q-text">Prodělal(a) jste jinou pohlavní infekci?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q23_a" name="q23" value="A">
+                <label for="q23_a">Ano</label>
+                <input type="radio" id="q23_n" name="q23" value="N">
+                <label for="q23_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-23A">
+            <label class="q-text">Jednalo se o tyto pohlavní infekce:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q23A" value="a"> kapavka</label>
+                <label><input type="checkbox" name="q23A" value="b"> chlamydie</label>
+                <label><input type="checkbox" name="q23A" value="c"> bradavičky pohlavních orgánů [kondylomata]</label>
+                <label><input type="checkbox" name="q23A" value="d"> genitální opar [herpes]</label>
+            </div>
+        </div>
+        <div class="question" id="q-24">
+            <label class="q-text">Jste očkován(a) proti žloutence typu B?<span class="info-icon" data-tooltip="V ČR/SR je očkování povinné pro ročníky 1991 a mladší.&#10;Na Ukrajině pro ročníky od 2002.">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q24_a" name="q24" value="A">
+                <label for="q24_a">Ano</label>
+                <input type="radio" id="q24_n" name="q24" value="N">
+                <label for="q24_n">Ne</label>
+            </div>
+        </div>
+        <div class="question" id="q-25">
+            <label class="q-text">Jste očkován(a) proti HPV?<span class="info-icon" data-tooltip="HPV = lidský papilomavirus">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q25_a" name="q25" value="A">
+                <label for="q25_a">Ano</label>
+                <input type="radio" id="q25_n" name="q25" value="N">
+                <label for="q25_n">Ne</label>
+            </div>
+        </div>
+        <div class="question" id="q-26">
+            <label class="q-text">Pozoroval(a) jste na sobě příznaky související s HIV nebo jinou sexuálně přenosnou infekcí?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q26_a" name="q26" value="A">
+                <label for="q26_a">Ano</label>
+                <input type="radio" id="q26_n" name="q26" value="N">
+                <label for="q26_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-26A">
+            <label class="q-text">O jaké příznaky se jednalo?</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q26A" value="a"> horečka</label>
+                <label><input type="checkbox" name="q26A" value="b"> bolest hlavy, svalů a kloubů</label>
+                <label><input type="checkbox" name="q26A" value="c"> bolest krku</label>
+                <label><input type="checkbox" name="q26A" value="d"> zduřelé uzliny</label>
+                <label><input type="checkbox" name="q26A" value="e"> vyrážka na trupu či dlaních</label>
+                <label><input type="checkbox" name="q26A" value="f"> vřídek na genitálu</label>
+                <label><input type="checkbox" name="q26A" value="g"> výtok</label>
+                <label><input type="checkbox" name="q26A" value="h"> jiné příznaky</label>
+            </div>
+        </div>
+
+        <!-- BLOK 8: Další rizika -->
+        <h2 class="block-title"></h2>
+        <div class="question" id="q-27">
+            <label class="q-text">Užil jste někdy nějakou drogu či jinou omamnou látku?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q27_a" name="q27" value="A">
+                <label for="q27_a">Ano</label>
+                <input type="radio" id="q27_n" name="q27" value="N">
+                <label for="q27_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-27A">
+            <label class="q-text">Jakým způsobem jste látku užil(a)?</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q27A" value="a"> neinjekčně nosem <span class="info-icon" data-tooltip="Tzv. šňupání">i</span></label>
+                <label><input type="checkbox" name="q27A" value="b"> injekčně nitrožilně</label>
+                <label><input type="checkbox" name="q27A" value="c"> jiným způsobem</label>
+            </div>
+        </div>
+        <div class="question" id="q-28">
+            <label class="q-text">Užil jste někdy drogu za účelem zlepšení sexuálního prožitku?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q28_a" name="q28" value="A">
+                <label for="q28_a">Ano</label>
+                <input type="radio" id="q28_n" name="q28" value="N">
+                <label for="q28_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-28A">
+            <label class="q-text">Užíváte látku za tímto účelem i nadále?</label>
+            <div class="segmented-control">
+                <input type="radio" id="q28a_a" name="q28A" value="A">
+                <label for="q28a_a">Ano</label>
+                <input type="radio" id="q28a_n" name="q28A" value="N">
+                <label for="q28a_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-28B">
+            <label class="q-text">Jednalo se o tyto látky:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q28B" value="a"> stimulanty <span class="info-icon" data-tooltip="Např. crystal, pervitin, kokain">i</span></label>
+                <label><input type="checkbox" name="q28B" value="b"> GHB / GBL <span class="info-icon" data-tooltip="Tzv. dží">i</span></label>
+                <label><input type="checkbox" name="q28B" value="c"> ketamin</label>
+                <label><input type="checkbox" name="q28B" value="d"> mephedron</label>
+                <label><input type="checkbox" name="q28B" value="e"> Viagra / Kamagra</label>
+                <label><input type="checkbox" name="q28B" value="f"> poppers</label>
+                <label><input type="checkbox" name="q28B" value="g"> jinou látku</label>
+            </div>
+        </div>
+
+        <!-- BLOK 9 -->
+        <h2 class="block-title"></h2>
+        <div class="question" id="q-30">
+            <label class="q-text">Máte zkušenost s placenými sexuálními službami?<span class="info-icon" data-tooltip="Např. sexem za peníze či jinou odměnu,&#10;či působením v pornografickém průmyslu.">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q30_a" name="q30" value="A">
+                <label for="q30_a">Ano</label>
+                <input type="radio" id="q30_n" name="q30" value="N">
+                <label for="q30_n">Ne</label>
+            </div>
+        </div>
+
+        <!-- BLOK 10 -->
+        <h2 class="block-title"></h2>
+        <div class="question" id="q-31">
+            <label class="q-text">Přejete si vystavit mezinárodní certifikát o výsledku testu? <span class="info-icon" data-tooltip="Provádíme za poplatek po předložení dokladu totožnosti.">i</span></label>
+            <div class="segmented-control">
+                <input type="radio" id="q31_a" name="q31" value="A">
+                <label for="q31_a">Ano</label>
+                <input type="radio" id="q31_n" name="q31" value="N">
+                <label for="q31_n">Ne</label>
+            </div>
+        </div>
+        <div class="question hidden-by-logic" id="q-31A">
+            <label class="q-text">Vyberte pro výsledek kterého testu, si certifikát přejete vyhotovit:</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="q31A" value="a"> HIV [350 Kč]</label>
+                <label><input type="checkbox" name="q31A" value="b"> syfilis [350 Kč]</label>
+                <label><input type="checkbox" name="q31A" value="c"> žloutenka B [350 Kč]</label>
+                <label><input type="checkbox" name="q31A" value="d"> žloutenka C [350 Kč]</label>
+            </div>
+        </div>
+        <!-- Navigace pro slideshow mód -->
+        <div id="slideshow-nav">
+            <button type="button" class="btn" id="btn-prev" onclick="navigate(-1)">← Předchozí</button>
+            <button type="button" class="btn" id="btn-next" onclick="navigate(1)">Další →</button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    let isSlideshow = false;
+    let currentSlide = 0;
+    const questions = Array.from(document.querySelectorAll('.question'));
+
+    function setMode(mode) {
+        const form = document.getElementById('survey-form');
+        document.getElementById('btn-long').classList.toggle('active', mode === 'long');
+        document.getElementById('btn-slide').classList.toggle('active', mode === 'slideshow');
+        
+        if (mode === 'slideshow') {
+            form.classList.remove('mode-long');
+            form.classList.add('mode-slideshow');
+            isSlideshow = true;
+            currentSlide = 0;
+            evaluateLogic();
+            showSlide(currentSlide);
+        } else {
+            form.classList.remove('mode-slideshow');
+            form.classList.add('mode-long');
+            isSlideshow = false;
+            evaluateLogic();
+        }
+    }
+
+    function evaluateLogic() {
+        const getValue = (name) => {
+            const el = document.querySelector(`[name="${name}"]:checked`);
+            return el ? el.value : null;
+        };
+        const isChecked = (name, val) => {
+            const el = document.querySelector(`[name="${name}"][value="${val}"]`);
+            return el ? el.checked : false;
+        };
+        const getNum = (name) => {
+            const el = document.querySelector(`[name="${name}"]`);
+            if(!el) return null;
+            return el.value === "" ? null : parseFloat(el.value);
+        };
+        const getSelect = (name) => {
+            const el = document.querySelector(`[name="${name}"]`);
+            return el ? el.value : "";
+        };
+
+        const toggle = (id, condition) => {
+            const el = document.getElementById(id);
+            if(el) {
+                if(condition) el.classList.remove('hidden-by-logic');
+                else el.classList.add('hidden-by-logic');
+            }
+        };
+
+        // HLAVNÍ LOGIKA PRO POSUVNÍKY (Otázky 11, 12, 13, 14)
+        function updateSlidersLogic() {
+            const q11Input = document.querySelector('[name="q11"]');
+            if (!q11Input) return;
+            
+            let total = parseInt(q11Input.value) || 0;
+            
+            const q12Men = document.getElementById('q12-men-slider');
+            const q12Women = document.getElementById('q12-women-slider');
+            if (!q12Men || !q12Women) return;
+
+            // 1. Logika pro Q12 (Provázané, součet musí být Q11)
+            q12Men.max = total;
+            q12Women.max = total;
+
+            let m12 = parseInt(q12Men.value) || 0;
+            let w12 = parseInt(q12Women.value) || 0;
+
+            // Vynucení přesného součtu v Q12
+            if (m12 + w12 !== total) {
+                if (m12 > total) m12 = total;
+                w12 = total - m12; // Zbytek připadne ženám
+                q12Men.value = m12;
+                q12Women.value = w12;
+            }
+            
+            document.getElementById('q12-men-val').innerText = m12;
+            document.getElementById('q12-women-val').innerText = w12;
+
+            // 2. Logika pro Q13 a Q14 (Nezávislé, ale limitované hodnotami z Q12)
+            const syncSubSlider = (sliderId, displayId, maxVal) => {
+                const slider = document.getElementById(sliderId);
+                const display = document.getElementById(displayId);
+                if (slider && display) {
+                    slider.max = maxVal; // Limit převzatý z Q12
+                    // Pokud je slider nad novým limitem, ořízni ho
+                    if (parseInt(slider.value) > maxVal) {
+                        slider.value = maxVal;
+                    }
+                    display.innerText = slider.value;
+                }
+            };
+
+            syncSubSlider('q13-men-slider', 'q13-men-val', m12);
+            syncSubSlider('q13-women-slider', 'q13-women-val', w12);
+            syncSubSlider('q14-men-slider', 'q14-men-val', m12);
+            syncSubSlider('q14-women-slider', 'q14-women-val', w12);
+        }
+
+        // Provedeme přepočet při každém volání evaluateLogic
+        updateSlidersLogic();
+
+        // Zajistíme přepočítávání posuvníků z Q12, když za ně uživatel tahá
+        const q12MenSl = document.getElementById('q12-men-slider');
+        const q12WomenSl = document.getElementById('q12-women-slider');
+        
+        if (q12MenSl && !q12MenSl.dataset.listenerAdded) {
+            q12MenSl.addEventListener('input', function() {
+                let total = parseInt(document.querySelector('[name="q11"]').value) || 0;
+                let mVal = parseInt(this.value) || 0;
+                document.getElementById('q12-women-slider').value = total - mVal;
+                updateSlidersLogic();
+            });
+            q12MenSl.dataset.listenerAdded = "true";
+        }
+
+        if (q12WomenSl && !q12WomenSl.dataset.listenerAdded) {
+            q12WomenSl.addEventListener('input', function() {
+                let total = parseInt(document.querySelector('[name="q11"]').value) || 0;
+                let wVal = parseInt(this.value) || 0;
+                document.getElementById('q12-men-slider').value = total - wVal;
+                updateSlidersLogic();
+            });
+            q12WomenSl.dataset.listenerAdded = "true";
+        }
+
+        // Posuvníky Q13 a Q14 přepisují textové hodnoty nezávisle při tažení
+        const independentSliders = [
+            { id: 'q13-men-slider', valId: 'q13-men-val' },
+            { id: 'q13-women-slider', valId: 'q13-women-val' },
+            { id: 'q14-men-slider', valId: 'q14-men-val' },
+            { id: 'q14-women-slider', valId: 'q14-women-val' }
+        ];
+
+        independentSliders.forEach(item => {
+            const slider = document.getElementById(item.id);
+            const display = document.getElementById(item.valId);
+            if (slider && display && !slider.dataset.listenerAdded) {
+                slider.addEventListener('input', function() {
+                    display.innerText = this.value;
+                });
+                slider.dataset.listenerAdded = "true";
+            }
+        });
+        // Podmínky zobrazení
+        const isNotCZSK = getValue('q3') === 'N';
+        toggle('q-3A', isNotCZSK);
+        toggle('q-3B', isNotCZSK);
+        
+        const q5_is_A = getValue('q5') === 'A';
+        toggle('q-5A', q5_is_A);
+
+        toggle('q-7A', getValue('q7') === 'A');
+
+        // Blok 4A
+        const q6_e = isChecked('q6', 'e');
+        toggle('q-8', q6_e);
+        const block4a = document.querySelector('.block-4a');
+        if(block4a) block4a.style.display = q6_e && !isSlideshow ? 'block' : 'none';
+        
+        const q8_is_N = getValue('q8') === 'N';
+        toggle('q-8A', q6_e && q8_is_N);
+        
+        const q8A_is_N = getValue('q8A') === 'N';
+        toggle('q-8B', q6_e && q8_is_N && q8A_is_N);
+
+        // Blok 4B
+        const q6_f = isChecked('q6', 'f');
+        toggle('q-9', q6_f);
+        toggle('q-10', q6_f);
+        const block4b = document.querySelector('.block-4b');
+        if(block4b) block4b.style.display = q6_f && !isSlideshow ? 'block' : 'none';
+
+        // Blok 5 a 5A (Dynamické posuvníky)
+        const q11_val = getNum('q11');
+        const q11_gt_0 = q11_val !== null && q11_val > 0;
+        
+        toggle('q-12', q11_gt_0);
+        toggle('q-13', q11_gt_0);
+        toggle('q-14', q11_gt_0);
+        toggle('q-15', q11_gt_0);
+        
+        const block5a = document.querySelector('.block-5a');
+        if(block5a) block5a.style.display = q11_gt_0 && !isSlideshow ? 'block' : 'none';
+        
+        // Výpočet pro zobrazení 14A - součet obou nezávislých posuvníků v Q14 musí být 0
+        let q14_total = 0;
+        const q14MenInput = document.getElementById('q14-men-slider');
+        const q14WomenInput = document.getElementById('q14-women-slider');
+        if (q14MenInput && q14WomenInput) {
+            q14_total = parseInt(q14MenInput.value) + parseInt(q14WomenInput.value);
+        }
+        
+        toggle('q-14A', q11_gt_0 && q14_total === 0);
+
+        // Blok 6
+        toggle('q-16A', getValue('q16') === 'A');
+
+        const q2_val = getValue('q2');
+        toggle('q-18', q2_val === 'b' || q2_val === 'c' || q2_val === 'd' || q2_val === 'e' || q2_val === 'f');
+
+        const q19_val = getValue('q19');
+        toggle('q-19A', q19_val === 'b' || q19_val === 'c');
+
+        // Blok 7
+        
+        const q23_A = getValue('q23') === 'A';
+        toggle('q-23A', q23_A);
+        toggle('q-23B', q23_A && isChecked('q23A', 'd'));
+
+        toggle('q-26A', getValue('q26') === 'A');
+
+    // Blok 8
+        toggle('q-27A', getValue('q27') === 'A');
+        
+        const q28_A = getValue('q28') === 'A';
+        toggle('q-28A', q28_A);
+        toggle('q-28B', q28_A);
+        
+        // Blok 10
+        toggle('q-31A', getValue('q31') === 'A');
+    }
+
+    function getVisibleQuestions() {
+        return questions.filter(q => !q.classList.contains('hidden-by-logic'));
+    }
+
+    function showSlide(index) {
+        const visibleQs = getVisibleQuestions();
+        if (index < 0) index = 0;
+        if (index >= visibleQs.length) index = visibleQs.length - 1;
+        
+        currentSlide = index;
+        
+        questions.forEach(q => q.classList.remove('active-slide'));
+        if(visibleQs[currentSlide]) {
+            visibleQs[currentSlide].classList.add('active-slide');
+        }
+
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        
+        if(btnPrev) btnPrev.style.display = currentSlide === 0 ? 'none' : 'block';
+        if(btnNext) btnNext.innerText = currentSlide === visibleQs.length - 1 ? 'Odeslat' : 'Další →';
+    }
+
+    function navigate(step) {
+        const visibleQs = getVisibleQuestions();
+        if (step === 1 && currentSlide === visibleQs.length - 1) {
+            alert("Dotazník byl úspěšně dokončen!");
+            return;
+        }
+        currentSlide += step;
+        showSlide(currentSlide);
+    }
+
+    document.getElementById('survey-form').addEventListener('input', () => {
+        evaluateLogic();
+        if (isSlideshow) {
+            showSlide(currentSlide); 
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+    // 1. Inicializace pro otázku 3A (Státy)
+    let q3aSelect = new TomSelect("#q3A-select", {
+        create: false,
+        maxOptions: null,
+        placeholder: "-- Vyhledejte stát, začněte psát --",
+        sortField: {
+            field: "text",
+            direction: "asc"
+        }
+    });
+    q3aSelect.clear(); 
+
+    // 2. Inicializace pro otázku 4 (Kraje)
+    let q4Select = new TomSelect("#q4-select", {
+        create: false,
+        maxOptions: null,
+        placeholder: "-- Vyhledejte kraj, začněte psát --",
+        // Zde neseřazujeme abecedně, aby zůstala Praha nahoře a zachovalo se původní pořadí
+    });
+    q4Select.clear();
+});
+
+    // Úvodní inicializace
+    evaluateLogic();
+</script>
+</body>
+</html>
